@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: appsecret
+      POSTGRES_DB: sentiment_reviews
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d sentiment_reviews"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_URL=postgresql://app:appsecret@postgres:5432/sentiment_reviews
+      - SENTIMENT_NGRAM_SIZE=2
+      - SENTIMENT_MAX_CSV_TRAINING_ROWS=5000
+      - SENTIMENT_CONFIDENCE_BOOST=1.2
+      - SENTIMENT_EMPTY_INPUT_CONFIDENCE=0.5
+      - SENTIMENT_KNOWLEDGE_MIN_CONFIDENCE_FLOOR=0.85
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
