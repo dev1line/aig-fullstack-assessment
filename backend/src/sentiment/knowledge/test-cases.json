@@ -1,0 +1,17 @@
+[
+  {
+    "input": "Amazing pizza! Great service and fast delivery. Highly recommend!",
+    "expectedSentiment": "POSITIVE",
+    "minConfidence": 0.8
+  },
+  {
+    "input": "Terrible coffee, rude staff, and overpriced. Never going back.",
+    "expectedSentiment": "NEGATIVE",
+    "minConfidence": 0.7
+  },
+  {
+    "input": "Food was okay, nothing special. Service was average.",
+    "expectedSentiment": "NEUTRAL",
+    "minConfidence": 0.6
+  }
+]
