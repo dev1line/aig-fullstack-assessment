@@ -26,6 +26,7 @@ A fullstack **sentiment analysis** application for customer reviews: submit revi
 | [**Frontend**](frontend/README.md) | Next.js app: setup, scripts, static export, env. |
 | [**Infrastructure (AWS)**](infra-aws/README.md) | CloudFormation templates, deploy scripts, RDS/ECS/S3/CloudFront, troubleshooting. |
 | [**Architecture**](infra-aws/ARCHITECTURE.md) | AWS architecture diagram (Mermaid), components, and data flow. |
+| [**Sentiment Algorithm**](docs/SENTIMENT-ALGORITHM.md) | How the sentiment classifier works: Bayes classifier, N-grams, knowledge cases, training data. |
 
 ---
 
