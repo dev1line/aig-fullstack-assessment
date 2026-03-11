@@ -1,0 +1,143 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: RDS PostgreSQL for the sentiment app backend (ECS).
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: sentiment-app
+    Description: Project name prefix for resource naming.
+
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC where RDS will be placed.
+
+  PrivateSubnetIds:
+    Type: CommaDelimitedList
+    Description: Private subnet IDs (at least 2 in different AZs), comma-separated (e.g. from network stack PrivateSubnetIds output).
+
+  VpcCidr:
+    Type: String
+    Default: 10.0.0.0/16
+    Description: VPC CIDR block; RDS SG will allow inbound 5432 from this range (so ECS tasks can connect).
+
+  DatabaseName:
+    Type: String
+    Default: sentiment_reviews
+    Description: Name of the database to create.
+
+  MasterUsername:
+    Type: String
+    Default: app
+    Description: Master username for the DB instance.
+    NoEcho: false
+
+  MasterUserPassword:
+    Type: String
+    NoEcho: true
+    Description: Master password for the DB instance.
+    MinLength: 8
+
+  DBInstanceClass:
+    Type: String
+    Default: db.t3.micro
+    AllowedValues:
+      - db.t3.micro
+      - db.t3.small
+      - db.t4g.micro
+      - db.t4g.small
+    Description: DB instance class.
+
+  AllocatedStorage:
+    Type: Number
+    Default: 20
+    MinValue: 20
+    MaxValue: 65536
+    Description: Allocated storage in GB.
+
+Resources:
+  DbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for RDS PostgreSQL; allow 5432 from VPC.
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          CidrIp: !Ref VpcCidr
+      SecurityGroupEgress:
+        - IpProtocol: '-1'
+          FromPort: 0
+          ToPort: 0
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-rds-sg'
+
+  DbSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Private subnets for sentiment-app RDS
+      SubnetIds: !Ref PrivateSubnetIds
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-db-subnet-group'
+
+  DbInstance:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Snapshot
+    Properties:
+      DBInstanceIdentifier: !Sub '${ProjectName}-postgres'
+      Engine: postgres
+      EngineVersion: '15'
+      DBInstanceClass: !Ref DBInstanceClass
+      AllocatedStorage: !Ref AllocatedStorage
+      StorageType: gp2
+      DBName: !Ref DatabaseName
+      MasterUsername: !Ref MasterUsername
+      MasterUserPassword: !Ref MasterUserPassword
+      DBSubnetGroupName: !Ref DbSubnetGroup
+      VPCSecurityGroups:
+        - !Ref DbSecurityGroup
+      MultiAZ: false
+      PubliclyAccessible: false
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-postgres'
+
+Outputs:
+  DbEndpoint:
+    Description: RDS instance endpoint (hostname)
+    Value: !GetAtt DbInstance.Endpoint.Address
+    Export:
+      Name: !Sub '${ProjectName}-DbEndpoint'
+
+  DbPort:
+    Description: RDS instance port
+    Value: !GetAtt DbInstance.Endpoint.Port
+    Export:
+      Name: !Sub '${ProjectName}-DbPort'
+
+  DatabaseName:
+    Description: Database name
+    Value: !Ref DatabaseName
+    Export:
+      Name: !Sub '${ProjectName}-DatabaseName'
+
+  MasterUsername:
+    Description: Master username (use with Secrets Manager or parameter)
+    Value: !Ref MasterUsername
+    Export:
+      Name: !Sub '${ProjectName}-DbMasterUsername'
+
+  DbSecurityGroupId:
+    Description: RDS security group ID
+    Value: !Ref DbSecurityGroup
+    Export:
+      Name: !Sub '${ProjectName}-DbSecurityGroupId'
+
+  DatabaseUrlHint:
+    Description: Build DATABASE_URL as postgresql://MasterUsername:MasterUserPassword@DbEndpoint:5432/DatabaseName
+    Value: !Sub 'postgresql://${MasterUsername}:<password>@${DbInstance.Endpoint.Address}:5432/${DatabaseName}'
+    Export:
+      Name: !Sub '${ProjectName}-DatabaseUrlHint'
