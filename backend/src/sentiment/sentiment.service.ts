@@ -4,7 +4,7 @@ import natural from 'natural';
 import * as fs from 'fs';
 import * as path from 'path';
 import { SentimentResult } from '../common/interfaces/sentiment-result.interface';
-import { loadCsv } from './utils';
+import { loadCsv, preprocess } from './utils';
 
 interface KnowledgeCase {
   input: string;
@@ -20,6 +20,7 @@ export class SentimentService {
   private readonly confidenceBoost: number;
   private readonly emptyInputConfidence: number;
   private readonly knowledgeMinConfidenceFloor: number;
+  private readonly ngramSize: number;
   private csvTrainingRowCount = 0;
 
   constructor(private readonly configService: ConfigService) {
@@ -34,6 +35,10 @@ export class SentimentService {
     this.knowledgeMinConfidenceFloor = this.configService.get<number>(
       'sentiment.knowledgeMinConfidenceFloor',
       0.85,
+    );
+    this.ngramSize = this.configService.get<number>(
+      'sentiment.ngramSize',
+      2,
     );
 
     this.classifier = new natural.BayesClassifier();
@@ -59,10 +64,10 @@ export class SentimentService {
 
   private trainClassifier(): void {
     for (const kc of this.knowledgeCases) {
-      this.classifier.addDocument(
-        kc.input,
-        kc.expectedSentiment.toLowerCase(),
-      );
+      const tokens = preprocess(kc.input, this.ngramSize);
+      if (tokens.length > 0) {
+        this.classifier.addDocument(tokens, kc.expectedSentiment.toLowerCase());
+      }
     }
 
     const maxRows = this.configService.get<number>(
@@ -77,13 +82,16 @@ export class SentimentService {
     );
 
     for (const row of csvRows) {
-      if (row.text.trim()) {
-        this.classifier.addDocument(row.text, row.sentiment.toLowerCase());
+      const tokens = preprocess(row.text, this.ngramSize);
+      if (tokens.length > 0) {
+        this.classifier.addDocument(tokens, row.sentiment.toLowerCase());
       }
     }
 
     this.classifier.train();
-    this.logger.log('Classifier trained successfully');
+    this.logger.log(
+      `Classifier trained with preprocessing (ngram=${this.ngramSize})`,
+    );
   }
 
   getCsvTrainingRowCount(): number {
@@ -137,7 +145,9 @@ export class SentimentService {
   }
 
   private classifyText(text: string): SentimentResult {
-    const classifications = this.classifier.getClassifications(text);
+    const tokens = preprocess(text, this.ngramSize);
+    const input = tokens.length > 0 ? tokens : text;
+    const classifications = this.classifier.getClassifications(input);
 
     const scoreMap = this.computeScores(classifications);
 

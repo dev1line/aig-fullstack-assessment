@@ -1,6 +1,7 @@
 export {
   tokenize,
   removeStopwords,
+  removeSentimentStopwords,
   generateNgrams,
   preprocess,
 } from './sentiment-preprocess';

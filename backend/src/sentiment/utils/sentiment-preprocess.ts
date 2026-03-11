@@ -2,6 +2,13 @@ import natural from 'natural';
 
 const stopwords = new Set(natural.stopwords);
 
+const SENTIMENT_KEEP_WORDS = new Set([
+  'not', 'no', 'nor', 'never', 'neither', 'nobody', 'nothing',
+  'nowhere', 'hardly', 'scarcely', 'barely', 'cannot',
+  'very', 'really', 'too', 'most', 'more', 'less', 'least',
+  'only', 'just', 'even', 'but', 'however', 'although',
+]);
+
 export function tokenize(text: string): string[] {
   const tokenizer = new natural.WordTokenizer();
   return tokenizer.tokenize(text.toLowerCase()) || [];
@@ -9,6 +16,10 @@ export function tokenize(text: string): string[] {
 
 export function removeStopwords(tokens: string[]): string[] {
   return tokens.filter((t) => !stopwords.has(t));
+}
+
+export function removeSentimentStopwords(tokens: string[]): string[] {
+  return tokens.filter((t) => !stopwords.has(t) || SENTIMENT_KEEP_WORDS.has(t));
 }
 
 export function generateNgrams(tokens: string[], maxN: number): string[] {
@@ -24,6 +35,6 @@ export function generateNgrams(tokens: string[], maxN: number): string[] {
 export function preprocess(text: string, ngramSize: number): string[] {
   if (!text.trim()) return [];
   const tokens = tokenize(text);
-  const filtered = removeStopwords(tokens);
+  const filtered = removeSentimentStopwords(tokens);
   return generateNgrams(filtered, ngramSize);
 }
