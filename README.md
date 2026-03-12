@@ -98,13 +98,13 @@ A PoC that works on `localhost` encounters many new issues when deployed to the 
 
 However, this introduced a specific challenge:
 
-**Client-side navigation breaks on S3.** In local development (`npm run dev`), `next/link` handles client-side routing seamlessly. But when the static export is served from S3, direct navigation to `/reviews` fails — S3 looks for an object key `/reviews` which does not exist (the actual file is `reviews.html`). There are three approaches to solve this:
+**Client-side navigation breaks on S3.** In local development (`npm run dev`), `next/link` handles client-side routing seamlessly. But when the static export is served from S3, direct navigation to `/reviews` can fail if S3 looks for an object key `/reviews` which does not exist (the actual file is `reviews.html` or `reviews/index.html`). There are three approaches to solve this:
 
-1. **Use `<a>` tags** instead of `next/link` — forces full page reloads, losing the SPA experience.
-2. **Set `trailingSlash: true`** in `next.config.js` — Next.js then generates `/reviews/index.html`, which S3 resolves naturally when configured with an index document.
+1. **Use `<a>` tags** instead of `next/link` — forces full page reloads, but works reliably with S3 object keys like `index.html` or `reviews.html`.
+2. **Set `trailingSlash: true`** in `next.config.js` — Next.js then generates `/reviews/index.html`, which S3 resolves naturally when configured with an index document.  
 3. **CloudFront Function** — a lightweight edge function that rewrites the URI (e.g., `/reviews` → `/reviews.html`) before S3 receives the request.
 
-This project uses option **3** (CloudFront Function), which preserves the `next/link` client-side navigation in the code while letting S3 serve the correct HTML files. The tradeoff is an extra piece of infrastructure to maintain.
+In this project, navigation continues to use `next/link` for a smooth SPA experience, and **option 2** is applied via `trailingSlash: true` in `next.config.js`, so the static export produces `reviews/index.html` that S3 can serve when users access `/reviews/` directly.
 
 This is a real-world lesson: even a simple PoC reveals deployment-specific issues (routing, CORS, HTTPS mixed content, database connectivity) that simply don't exist when running `npm run dev` locally.
 

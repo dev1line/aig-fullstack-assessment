@@ -9,7 +9,10 @@
 * 🟢 You can import this file directly.
 */
 
+export const Sentiment = {
+  POSITIVE: 'POSITIVE',
+  NEGATIVE: 'NEGATIVE',
+  NEUTRAL: 'NEUTRAL'
+} as const
 
-
-// This file is empty because there are no enums in the schema.
-export {}
+export type Sentiment = (typeof Sentiment)[keyof typeof Sentiment]

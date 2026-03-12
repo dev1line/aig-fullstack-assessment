@@ -60,7 +60,7 @@ describe('ReviewsService', () => {
     expect(result.id).toBe('abc');
   });
 
-  it('should return all reviews ordered by createdAt desc', async () => {
+  it('should return paginated reviews with nextCursor and hasMore', async () => {
     const mockReview = {
       id: 'r1',
       text: 'Good',
@@ -74,13 +74,60 @@ describe('ReviewsService', () => {
     };
     mockPrisma.review.findMany.mockResolvedValue([mockReview]);
 
-    const result = await service.findAll();
+    const result = await service.findPage(undefined, 20);
 
-    expect(mockPrisma.review.findMany).toHaveBeenCalledWith({
-      orderBy: { createdAt: 'desc' },
-    });
-    expect(result).toHaveLength(1);
-    expect(result[0].id).toBe('r1');
+    expect(mockPrisma.review.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        take: 21,
+      }),
+    );
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0].id).toBe('r1');
+    expect(result.hasMore).toBe(false);
+    expect(result.nextCursor).toBeNull();
+  });
+
+  it('should return hasMore and nextCursor when more than limit exist', async () => {
+    const mockReviews = Array.from({ length: 21 }, (_, i) => ({
+      id: `r${i}`,
+      text: 'Good',
+      sentiment: 'POSITIVE' as const,
+      confidence: 0.9,
+      positive: 0.9,
+      negative: 0.05,
+      neutral: 0.05,
+      createdAt: new Date('2026-01-01'),
+      updatedAt: new Date('2026-01-01'),
+    }));
+    mockPrisma.review.findMany.mockResolvedValue(mockReviews);
+
+    const result = await service.findPage(undefined, 20);
+
+    expect(result.items).toHaveLength(20);
+    expect(result.hasMore).toBe(true);
+    expect(result.nextCursor).toContain('::');
+    expect(result.nextCursor).toContain('r19');
+  });
+
+  it('should apply cursor filter when cursor is provided', async () => {
+    mockPrisma.review.findMany.mockResolvedValue([]);
+
+    await service.findPage('2026-01-01T00:00:00.000Z::r0', 10);
+
+    expect(mockPrisma.review.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          OR: [
+            { createdAt: { lt: new Date('2026-01-01T00:00:00.000Z') } },
+            {
+              createdAt: new Date('2026-01-01T00:00:00.000Z'),
+              id: { lt: 'r0' },
+            },
+          ],
+        },
+      }),
+    );
   });
 
   it('should map sentiment scores to review fields', async () => {

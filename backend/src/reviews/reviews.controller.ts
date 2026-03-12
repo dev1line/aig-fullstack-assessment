@@ -1,7 +1,8 @@
-import { Controller, Post, Get, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Body, Query, UseGuards } from '@nestjs/common';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { ReviewsService } from './reviews.service';
 import { AnalyzeDto } from './dto/analyze.dto';
+import { ReviewsQueryDto, getLimit } from './dto/reviews-query.dto';
 
 @Controller()
 export class ReviewsController {
@@ -14,8 +15,10 @@ export class ReviewsController {
     return this.reviewsService.analyze(dto.text);
   }
 
+  /** GET /reviews?limit=10&cursor=... — cursor optional (first page when omitted), limit optional (default 10). */
   @Get('reviews')
-  async findAll() {
-    return this.reviewsService.findAll();
+  async getReviews(@Query() query: ReviewsQueryDto) {
+    const limit = getLimit(query.limit);
+    return this.reviewsService.findPage(query.cursor, limit);
   }
 }
