@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 
 const tabs = [
   { href: '/', label: 'Analyze' },
-  { href: '/reviews', label: 'Reviews' },
+  { href: '/reviews/', label: 'Reviews' },
 ];
 
 export function TabToggle() {

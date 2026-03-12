@@ -1,3 +1,5 @@
+export type SentimentValue = 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL';
+
 export interface SentimentScores {
   positive: number;
   negative: number;
@@ -5,7 +7,7 @@ export interface SentimentScores {
 }
 
 export interface SentimentResult {
-  sentiment: 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL';
+  sentiment: SentimentValue;
   confidence: number;
   scores: SentimentScores;
 }
@@ -14,4 +16,10 @@ export interface ReviewResponse extends SentimentResult {
   id: string;
   text: string;
   createdAt: string;
+}
+
+export interface PaginatedReviewsResponse {
+  items: ReviewResponse[];
+  nextCursor: string | null;
+  hasMore: boolean;
 }

@@ -52,11 +52,15 @@ describe('analyzeReview', () => {
 });
 
 describe('getReviews', () => {
-  it('should GET /reviews and return array', async () => {
-    const mockReviews = [{ id: '1', text: 'Good', sentiment: 'POSITIVE' }];
+  it('should GET /reviews and return paginated response', async () => {
+    const mockResponse = {
+      items: [{ id: '1', text: 'Good', sentiment: 'POSITIVE' }],
+      nextCursor: null,
+      hasMore: false,
+    };
     mockFetch.mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve(mockReviews),
+      json: () => Promise.resolve(mockResponse),
     });
 
     const result = await getReviews();
@@ -64,7 +68,25 @@ describe('getReviews', () => {
     expect(mockFetch).toHaveBeenCalledWith(
       expect.stringContaining('/reviews'),
     );
-    expect(result).toEqual(mockReviews);
+    expect(result).toEqual(mockResponse);
+    expect(result.items).toHaveLength(1);
+    expect(result.nextCursor).toBeNull();
+    expect(result.hasMore).toBe(false);
+  });
+
+  it('should pass cursor and limit when provided', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve({ items: [], nextCursor: null, hasMore: false }),
+    });
+
+    await getReviews('2026-01-01T00:00:00.000Z::abc', 10);
+
+    const callUrl = mockFetch.mock.calls[0][0];
+    expect(callUrl).toContain('/reviews');
+    expect(callUrl).toContain('cursor=');
+    expect(callUrl).toContain('limit=10');
   });
 
   it('should throw error when GET /reviews returns non-ok', async () => {

@@ -43,7 +43,7 @@ export type ReviewSumAggregateOutputType = {
 export type ReviewMinAggregateOutputType = {
   id: string | null
   text: string | null
-  sentiment: string | null
+  sentiment: $Enums.Sentiment | null
   confidence: number | null
   positive: number | null
   negative: number | null
@@ -55,7 +55,7 @@ export type ReviewMinAggregateOutputType = {
 export type ReviewMaxAggregateOutputType = {
   id: string | null
   text: string | null
-  sentiment: string | null
+  sentiment: $Enums.Sentiment | null
   confidence: number | null
   positive: number | null
   negative: number | null
@@ -218,7 +218,7 @@ export type ReviewGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalA
 export type ReviewGroupByOutputType = {
   id: string
   text: string
-  sentiment: string
+  sentiment: $Enums.Sentiment
   confidence: number
   positive: number
   negative: number
@@ -253,7 +253,7 @@ export type ReviewWhereInput = {
   NOT?: Prisma.ReviewWhereInput | Prisma.ReviewWhereInput[]
   id?: Prisma.StringFilter<"Review"> | string
   text?: Prisma.StringFilter<"Review"> | string
-  sentiment?: Prisma.StringFilter<"Review"> | string
+  sentiment?: Prisma.EnumSentimentFilter<"Review"> | $Enums.Sentiment
   confidence?: Prisma.FloatFilter<"Review"> | number
   positive?: Prisma.FloatFilter<"Review"> | number
   negative?: Prisma.FloatFilter<"Review"> | number
@@ -280,7 +280,7 @@ export type ReviewWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.ReviewWhereInput[]
   NOT?: Prisma.ReviewWhereInput | Prisma.ReviewWhereInput[]
   text?: Prisma.StringFilter<"Review"> | string
-  sentiment?: Prisma.StringFilter<"Review"> | string
+  sentiment?: Prisma.EnumSentimentFilter<"Review"> | $Enums.Sentiment
   confidence?: Prisma.FloatFilter<"Review"> | number
   positive?: Prisma.FloatFilter<"Review"> | number
   negative?: Prisma.FloatFilter<"Review"> | number
@@ -312,7 +312,7 @@ export type ReviewScalarWhereWithAggregatesInput = {
   NOT?: Prisma.ReviewScalarWhereWithAggregatesInput | Prisma.ReviewScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"Review"> | string
   text?: Prisma.StringWithAggregatesFilter<"Review"> | string
-  sentiment?: Prisma.StringWithAggregatesFilter<"Review"> | string
+  sentiment?: Prisma.EnumSentimentWithAggregatesFilter<"Review"> | $Enums.Sentiment
   confidence?: Prisma.FloatWithAggregatesFilter<"Review"> | number
   positive?: Prisma.FloatWithAggregatesFilter<"Review"> | number
   negative?: Prisma.FloatWithAggregatesFilter<"Review"> | number
@@ -324,7 +324,7 @@ export type ReviewScalarWhereWithAggregatesInput = {
 export type ReviewCreateInput = {
   id?: string
   text: string
-  sentiment: string
+  sentiment: $Enums.Sentiment
   confidence: number
   positive: number
   negative: number
@@ -336,7 +336,7 @@ export type ReviewCreateInput = {
 export type ReviewUncheckedCreateInput = {
   id?: string
   text: string
-  sentiment: string
+  sentiment: $Enums.Sentiment
   confidence: number
   positive: number
   negative: number
@@ -348,7 +348,7 @@ export type ReviewUncheckedCreateInput = {
 export type ReviewUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   text?: Prisma.StringFieldUpdateOperationsInput | string
-  sentiment?: Prisma.StringFieldUpdateOperationsInput | string
+  sentiment?: Prisma.EnumSentimentFieldUpdateOperationsInput | $Enums.Sentiment
   confidence?: Prisma.FloatFieldUpdateOperationsInput | number
   positive?: Prisma.FloatFieldUpdateOperationsInput | number
   negative?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -360,7 +360,7 @@ export type ReviewUpdateInput = {
 export type ReviewUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   text?: Prisma.StringFieldUpdateOperationsInput | string
-  sentiment?: Prisma.StringFieldUpdateOperationsInput | string
+  sentiment?: Prisma.EnumSentimentFieldUpdateOperationsInput | $Enums.Sentiment
   confidence?: Prisma.FloatFieldUpdateOperationsInput | number
   positive?: Prisma.FloatFieldUpdateOperationsInput | number
   negative?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -372,7 +372,7 @@ export type ReviewUncheckedUpdateInput = {
 export type ReviewCreateManyInput = {
   id?: string
   text: string
-  sentiment: string
+  sentiment: $Enums.Sentiment
   confidence: number
   positive: number
   negative: number
@@ -384,7 +384,7 @@ export type ReviewCreateManyInput = {
 export type ReviewUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   text?: Prisma.StringFieldUpdateOperationsInput | string
-  sentiment?: Prisma.StringFieldUpdateOperationsInput | string
+  sentiment?: Prisma.EnumSentimentFieldUpdateOperationsInput | $Enums.Sentiment
   confidence?: Prisma.FloatFieldUpdateOperationsInput | number
   positive?: Prisma.FloatFieldUpdateOperationsInput | number
   negative?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -396,7 +396,7 @@ export type ReviewUpdateManyMutationInput = {
 export type ReviewUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   text?: Prisma.StringFieldUpdateOperationsInput | string
-  sentiment?: Prisma.StringFieldUpdateOperationsInput | string
+  sentiment?: Prisma.EnumSentimentFieldUpdateOperationsInput | $Enums.Sentiment
   confidence?: Prisma.FloatFieldUpdateOperationsInput | number
   positive?: Prisma.FloatFieldUpdateOperationsInput | number
   negative?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -457,6 +457,10 @@ export type ReviewSumOrderByAggregateInput = {
 
 export type StringFieldUpdateOperationsInput = {
   set?: string
+}
+
+export type EnumSentimentFieldUpdateOperationsInput = {
+  set?: $Enums.Sentiment
 }
 
 export type FloatFieldUpdateOperationsInput = {
@@ -529,7 +533,7 @@ export type $ReviewPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     text: string
-    sentiment: string
+    sentiment: $Enums.Sentiment
     confidence: number
     positive: number
     negative: number
@@ -961,7 +965,7 @@ export interface Prisma__ReviewClient<T, Null = never, ExtArgs extends runtime.T
 export interface ReviewFieldRefs {
   readonly id: Prisma.FieldRef<"Review", 'String'>
   readonly text: Prisma.FieldRef<"Review", 'String'>
-  readonly sentiment: Prisma.FieldRef<"Review", 'String'>
+  readonly sentiment: Prisma.FieldRef<"Review", 'Sentiment'>
   readonly confidence: Prisma.FieldRef<"Review", 'Float'>
   readonly positive: Prisma.FieldRef<"Review", 'Float'>
   readonly negative: Prisma.FieldRef<"Review", 'Float'>

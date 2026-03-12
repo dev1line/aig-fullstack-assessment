@@ -159,16 +159,21 @@ describe('Reviews API (e2e)', () => {
   });
 
   describe('GET /reviews', () => {
-    it('should return empty list initially', async () => {
+    it('should return paginated shape with empty items initially', async () => {
       const { body } = await request(app.getHttpServer())
         .get('/reviews')
         .expect(200);
 
-      expect(Array.isArray(body)).toBe(true);
-      expect(body).toHaveLength(0);
+      expect(body).toHaveProperty('items');
+      expect(body).toHaveProperty('nextCursor');
+      expect(body).toHaveProperty('hasMore');
+      expect(Array.isArray(body.items)).toBe(true);
+      expect(body.items).toHaveLength(0);
+      expect(body.hasMore).toBe(false);
+      expect(body.nextCursor).toBeNull();
     });
 
-    it('should return each review with valid shape', async () => {
+    it('should return each review with valid shape in items', async () => {
       await request(app.getHttpServer())
         .post('/analyze')
         .send({ text: 'Great food!' })
@@ -178,8 +183,8 @@ describe('Reviews API (e2e)', () => {
         .get('/reviews')
         .expect(200);
 
-      expect(body).toHaveLength(1);
-      const review = body[0];
+      expect(body.items).toHaveLength(1);
+      const review = body.items[0];
       expect(typeof review.id).toBe('string');
       expect(review.text).toBe('Great food!');
       expect(['POSITIVE', 'NEGATIVE', 'NEUTRAL']).toContain(review.sentiment);
@@ -205,9 +210,9 @@ describe('Reviews API (e2e)', () => {
         .get('/reviews')
         .expect(200);
 
-      expect(list).toHaveLength(1);
-      expect(list[0].id).toBe(created.id);
-      expect(list[0].text).toBe(text);
+      expect(list.items).toHaveLength(1);
+      expect(list.items[0].id).toBe(created.id);
+      expect(list.items[0].text).toBe(text);
     });
 
     it('should return reviews in descending createdAt order', async () => {
@@ -227,9 +232,25 @@ describe('Reviews API (e2e)', () => {
         .get('/reviews')
         .expect(200);
 
-      expect(body).toHaveLength(2);
-      expect(body[0].text).toBe('Second');
-      expect(body[1].text).toBe('First');
+      expect(body.items).toHaveLength(2);
+      expect(body.items[0].text).toBe('Second');
+      expect(body.items[1].text).toBe('First');
+    });
+
+    it('should support cursor and limit query params', async () => {
+      await request(app.getHttpServer())
+        .post('/analyze')
+        .send({ text: 'One review for limit test' })
+        .expect(201);
+
+      const { body: first } = await request(app.getHttpServer())
+        .get('/reviews')
+        .query({ limit: 1 })
+        .expect(200);
+
+      expect(first.items).toHaveLength(1);
+      expect(first.hasMore).toBe(false);
+      expect(first.nextCursor).toBeNull();
     });
 
     it('should return 404 for POST /reviews', async () => {

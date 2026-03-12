@@ -7,14 +7,22 @@ generator client {
   output   = "../src/generated/prisma"
 }
 
+enum Sentiment {
+  POSITIVE
+  NEGATIVE
+  NEUTRAL
+}
+
 model Review {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   text       String
-  sentiment  String
+  sentiment  Sentiment
   confidence Float
   positive   Float
   negative   Float
   neutral    Float
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([createdAt, id])
 }

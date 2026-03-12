@@ -84,9 +84,44 @@ Analyze sentiment and save review.
 
 ### GET `/reviews`
 
-Get the list of saved reviews (newest first).
+Get a **paginated** list of saved reviews (newest first) using a **cursor-based** API.
 
-**Response (200):** Array of objects with `id`, `text`, `sentiment`, `confidence`, `scores`, `createdAt`, `updatedAt`.
+**Query parameters:**
+
+- `cursor` (optional, string): Opaque cursor returned from the previous page (`nextCursor`).  
+  - When omitted → returns the **first page**.  
+  - When provided → returns the **next page** after that cursor.
+- `limit` (optional, number): Page size.  
+  - Default: `10`  
+  - Maximum: `100` (values above are clamped server-side).
+
+Reviews are ordered by `createdAt DESC, id DESC` to ensure stable pagination even when multiple reviews share the same timestamp. The cursor is an internal encoded value of the form `"createdAt::id"` and should be treated as **opaque** by clients.
+
+**Response (200):**
+
+```json
+{
+  "items": [
+    {
+      "id": "clxx...",
+      "text": "Review content",
+      "sentiment": "POSITIVE",
+      "confidence": 0.92,
+      "scores": { "positive": 0.92, "negative": 0.04, "neutral": 0.04 },
+      "createdAt": "2025-03-06T..."
+    }
+    // ...
+  ],
+  "nextCursor": "2025-03-06T12:34:56.789Z::clxx...", // or null when no more pages
+  "hasMore": true
+}
+```
+
+**Client usage pattern:**
+
+1. Call `GET /reviews?limit=10` with no `cursor` to get the first page.  
+2. Use the returned `nextCursor` (if not `null`) as the `cursor` query parameter for the next request.  
+3. Stop requesting more pages when `hasMore === false` or `nextCursor === null`.
 
 ---
 
